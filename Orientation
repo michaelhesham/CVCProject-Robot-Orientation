@@ -3,8 +3,6 @@ import numpy as np
 from array import *
 import pyzbar.pyzbar as pyzbar
 
-
-
 frameWidth = 640
 frameHeight = 480
 cap = cv2.VideoCapture(0)
@@ -125,20 +123,37 @@ def getOrientation(img,imgContour):
             else:
                 return "North"
 while True:
+    #read image from camera and make a copy
     success, img = cap.read()
     imgContour = img.copy()
+    
+    #reduce image noise and reduce detail
     imgBlur = cv2.GaussianBlur(img, (7, 7), 1)
+    
+    #change to gray image
     imgGray = cv2.cvtColor(imgBlur, cv2.COLOR_BGR2GRAY)
+    
+    #max and min threshold value
     threshold1 = cv2.getTrackbarPos("Threshold1", "Parameters")
     threshold2 = cv2.getTrackbarPos("Threshold2", "Parameters")
+    
+    #canny edge detection
     imgCanny = cv2.Canny(imgGray,threshold1,threshold2)
     kernel = np.ones((5, 5))
     imgDil = cv2.dilate(imgCanny, kernel, iterations=1)
+    
+    #read orientation
     robotOrientation = getOrientation(imgDil,imgContour)
+    print(robotOrientation)
+    
+    #rad data
+    location = getData()
+    print(location)
+    
+    #show 4 images
     imgStack = stackImages(0.5,([img,imgContour], [imgDil,imgCanny]))
     cv2.imshow("Result", imgStack)
-    location = getData()
-    print(robotOrientation)
-    print(location)
+    
+    #close window if 'q' key is pressed
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
